@@ -1,0 +1,95 @@
+﻿@page "/metricinternal"
+@inject IMetricInternalCollection metricInternalData
+@inject NavigationManager navManager
+@inject ProtectedSessionStorage sessionStorage
+@attribute [Authorize]
+<div class="container-fluid"><h1 style="page-heading text-start">Metric Internal Page</h1></div>
+<div class="container">
+    <div class="row col-lg-8">
+        <input type = "text" placeholder = "Type Designition To Search" aria-label = "Search Box" @oninput="(txt)=>OnSearchInput((string)txt?.Value)"/>
+    </div>
+</div>
+<div>
+    <div>
+        @if(metricInternals is not null)
+        {
+            <Virtualize Items="@metricInternals" Context="mi" OverscanCount="10">
+                <div class="card mt-3">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Thread Designition</th>
+                                <th scope="col">Class</th>
+                                <th scope="col">Minor Diameter</th>
+                                <th scope="col">Pitch Diameter</th>
+                                <th scope="col">Major Diameter</th>
+                                <th scope="col"><button type="button" class="btn btn-outline-dark btn-primary" @onclick="()=>OpenDrafterDetails(mi)">Drafter Details</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="col">@mi.CustomThreadDesignition</th>
+                                <th scope="col">@mi.Classification</th>
+                                <th scope="col">@Math.Round(mi.MinorDiaMin,3) - @Math.Round(mi.MinorDiaMax,3)</th>
+                                <th scope="col">@Math.Round(mi.PitchDiaMin,3) - @Math.Round(mi.PitchDiaMax,3)</th>
+                                <th scope="col">@Math.Round(mi.MajorDiaMin,3) - @Math.Round(mi.MajorDiaMax,3)</th>
+                                <th scope="col"><button type="button" class="btn btn-outline-secondary btn-info"@onclick="()=>OpenInspectorDetails(mi)">Inspector Details</button></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Virtualize>
+        }
+    </div>
+</div>
+
+@code {
+    private List<MetricInternal> metricInternals;
+    private string searchText = "";
+    protected async override Task OnInitializedAsync()
+    {
+        metricInternals = await metricInternalData.GetAllMetricInternalsAsync();
+    }
+    protected async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadFilterState();
+            await FilterMetricInternals();
+            StateHasChanged();
+        }
+    }
+    private async Task LoadFilterState()
+    {
+        var stringResults = await sessionStorage.GetAsync<string>(nameof(searchText));
+        searchText = stringResults.Success ? stringResults.Value : "";
+    }
+    private async Task SaveFilterState()
+    {
+        await sessionStorage.SetAsync(nameof(searchText), searchText);
+    }
+    private async Task FilterMetricInternals()
+    {
+        var output = await metricInternalData.GetAllMetricInternalsAsync();
+        if (string.IsNullOrWhiteSpace(searchText) == false)
+        {
+            output = output.Where(mi => mi.CustomThreadDesignition.Contains(searchText, StringComparison.InvariantCultureIgnoreCase))
+            .OrderBy(mi => mi.InternalId).ToList();
+        }
+        metricInternals = output;
+        await SaveFilterState();
+    }
+    private async Task OnSearchInput(string searchInput)
+    {
+        searchText = searchInput;
+        await FilterMetricInternals();
+    }
+    private void OpenDrafterDetails(MetricInternal metricInternal)
+    {
+        navManager.NavigateTo($"/drafter/metricinternal/{metricInternal.InternalId}");
+    }
+    private void OpenInspectorDetails(MetricInternal metricInternal)
+    {
+        navManager.NavigateTo($"/inspector/metricinternal/{metricInternal.InternalId}");
+    }
+}

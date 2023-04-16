@@ -1,0 +1,95 @@
+﻿@page "/standardinternal"
+@inject IStandardInternalCollection standardInternalData
+@inject NavigationManager navManager
+@inject ProtectedSessionStorage sessionStorage
+@attribute [Authorize]
+
+<div class="container-fluid"><h1 class="page-heading text-start">StandardInternalPage</h1></div>
+<div class="container-fluid">
+    <div class="row col-lg-8">
+        <input type="text" placeholder = "Type Designition To Search" aria-label = "Search Box" @oninput="((txt)=>OnSearchInput((string)txt?.Value))"/>
+    </div>
+</div>
+<div>
+    <div>
+        @if(standardInternals is not null)
+        {
+            <Virtualize Items="@standardInternals" Context="si" OverscanCount="10">
+                <div class="card mt-3 border-5">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Thread Designition</th>
+                                <th scope="col">Class</th>
+                                <th scope="col">Minor Diameter</th>
+                                <th scope="col">Pitch Diameter</th>
+                                <th scope="col">Major Diameter</th>
+                                <th scope="col"><button type="button" class="btn btn-primary btn-outline-dark"@onclick="(()=>OpenDrafterDetails(si))">Drafter Details</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="col">@si.CustomThreadDesignition</th>
+                                <th scope="col">@si.Classification</th>
+                                <th scope="col">@si.MinorDiaMin - @si.MinorDiaMax</th>
+                                <th scope="col">@si.PitchDiaMin - @si.PitchDiaMax</th>
+                                <th scope="col">@si.MajorDiaMin - No limit</th>
+                                <th scope="col"><button type="button" class="btn btn-secondary btn-outline-info" @onclick="(()=>OpenInspectorDetails(si))">Inspector Details</button></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Virtualize>
+        }
+    </div>
+</div>
+@code {
+    private List<StandardInternal> standardInternals;
+    private string searchText = "";
+    protected async override Task OnInitializedAsync()
+    {
+        standardInternals = await standardInternalData.GetAllStandardInternalsAsync();
+    }
+    protected async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadFilterState();
+            await FilterStandardInternals();
+            StateHasChanged();
+        }
+    }
+    private async Task LoadFilterState()
+    {
+        var stringResults = await sessionStorage.GetAsync<string>(nameof(searchText));
+        searchText = stringResults.Success ? stringResults.Value : "";
+    }
+    private async Task SaveFilterState()
+    {
+        await sessionStorage.SetAsync(nameof(searchText), searchText);
+    }
+    private async Task FilterStandardInternals()
+    {
+        var output = await standardInternalData.GetAllStandardInternalsAsync();
+        if (string.IsNullOrWhiteSpace(searchText) == false)
+        {
+            output = output.Where(si => si.CustomThreadDesignition.Contains(searchText, StringComparison.InvariantCultureIgnoreCase))
+            .OrderBy(si => si.InternalId).ToList();
+        }
+        standardInternals = output;
+        await SaveFilterState();
+    }
+    private async Task OnSearchInput(string searchInput)
+    {
+        searchText = searchInput;
+        await FilterStandardInternals();
+    }
+    private async Task OpenDrafterDetails(StandardInternal standardInternal)
+    {
+        navManager.NavigateTo($"/drafter/standardinternal/{standardInternal.InternalId}");
+    }
+    private async Task OpenInspectorDetails(StandardInternal standardInternal)
+    {
+        navManager.NavigateTo($"/inspector/standardinternal/{standardInternal.InternalId}");
+    }
+}

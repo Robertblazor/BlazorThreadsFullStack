@@ -1,0 +1,126 @@
+﻿@page "/inspector/standardexternal/{Id:int}"
+@inject IStandardExternalCollection standardExternalData
+@inject IStandardWireCollection standardWireData
+@inject NavigationManager navManager
+@attribute [Authorize]
+<h1 class="page-heading text-center">
+    Inspector's Page for Standard External Thread Info check
+</h1>
+<h1 class="text-center">
+    @standardExternal.CustomThreadDesignition @standardExternal.Classification
+</h1>
+<h3>More info and parameter will be added with coordination with Quality Department Machining Lab</h3>
+<div>
+    @if(standardExternal is not null)
+    {
+        <div>
+            <table class="table table-dark table-striped table border-2 table-bordered">
+                <thead>
+                    <tr class="text-center">
+                        <th scope="col">Unit System</th>
+                        <th scope="col">Max Major Diameter</th>
+                        <th scope="col">Min Major Diameter</th>
+                        <th scope="col">Max Pitch Diameter</th>
+                        <th scope="col">Min Pitch Diameter</th>
+                        <th scope="col">Max Minor Diameter</th>
+                        <th scope="col">Min Minor Diameter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="text-center">
+                        <th scope="col">English System</th>
+                        <th scope="col">@standardExternal.MajorDiaMax</th>
+                        <th scope="col">@standardExternal.MajorDiaMin</th>
+                        <th scope="col">@standardExternal.PitchDiaMax</th>
+                        <th scope="col">@standardExternal.PitchDiaMin</th>
+                        <th scope="col">@standardExternal.MinorDiaMax</th>
+                        <th scope="col">@standardExternal.MinorDiaMin</th>
+                    </tr>
+                    <tr class="text-center">
+                        <th scope="col">Metric System</th>
+                        <th scope="col">@(standardExternal.MajorDiaMax*25.4)</th>
+                        <th scope="col">@(standardExternal.MajorDiaMin*25.4)</th>
+                        <th scope="col">@(standardExternal.PitchDiaMax*25.4)</th>
+                        <th scope="col">@(standardExternal.PitchDiaMin*25.4)</th>
+                        <th scope="col">@(standardExternal.MinorDiaMax*25.4)</th>
+                        <th scope="col">@(standardExternal.MinorDiaMin*25.4)</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+<div>
+    @if(standardWire is not null)
+    {
+    <table class="table table-dark table-striped table border-2 table-bordered">
+        <thead>
+            <tr class="text-center">
+                <th scope="col">Unit system</th>
+                <th scope="col">Wire Pitch</th>
+                <th scope="col">Wire size</th>
+                <th scope="col">Wire Add</th>
+                <th scope="col">Wire Constant</th>
+                <th scope="col">OverWires Diameter Max</th>
+                <th scope="col">OverWires Diameter Min</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="text-center">
+                <th scope="col">English System</th>
+                <th scope="col">@standardWire.ThreadPerInch</th>
+                <th scope="col">@standardWire.WireSize</th>
+                <th scope="col">@standardWire.Add</th>
+                <th scope="col">@standardWire.Constant</th>
+                <th scope="col">@(standardExternal.PitchDiaMax + standardWire.Add)</th>
+                <th scope="col">@(standardExternal.PitchDiaMin + standardWire.Add)</th>
+            </tr>
+            <tr class="text-center">
+                <th scope="col">Metric System</th>
+                <th scope="col">@Math.Round(25.4/standardExternal.ThreadPerInch,3)</th>
+                <th scope="col">@Math.Round(standardWire.WireSize/25.4,3)</th>
+                <th scope="col">@Math.Round(standardWire.Add/25.4,3)</th>
+                <th scope="col">@Math.Round(standardWire.Constant/25.4,3)</th>
+                <th scope="col">@(standardExternal.PitchDiaMax + standardWire.Add)*25.4</th>
+                <th scope="col">@(standardExternal.PitchDiaMin + standardWire.Add)*25.4</th>
+            </tr>
+        </tbody>
+    </table>
+    }
+    @if(standardWire is null)
+    {
+        <span>No wire corresponds with this external thread</span>
+    }
+</div>
+<div>
+    <button class="btn btn-close btn-outline-light btn-primary" @onclick="()=>ClosePage()"></button>
+    <button class="btn btn-light btn-outline-info btn-dark"@onclick="()=>ToHomePage()">Back to Home Page</button>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private StandardExternal standardExternal;
+    private StandardWire? standardWire;
+    protected async override Task OnInitializedAsync()
+    {
+        standardExternal = await standardExternalData.GetStandardExternalByInternalIdAsync(Id);
+        try
+        {
+            standardWire = await standardWireData.GetStandardWiresByPitchAsync(standardExternal.ThreadPerInch);
+        }
+        catch(Exception)
+        {
+            standardWire = null;
+            throw;
+        }
+    }
+        private void ClosePage()
+    {
+        navManager.NavigateTo($"/standardexternal");
+    }
+    private void ToHomePage()
+    {
+        navManager.NavigateTo($"/");
+    }
+}

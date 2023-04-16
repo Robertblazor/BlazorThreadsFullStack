@@ -1,0 +1,96 @@
+﻿@page "/standardexternal"
+@inject IStandardExternalCollection standardExternalData
+@inject NavigationManager navManager
+@inject ProtectedSessionStorage sessionStorage
+@attribute [Authorize]
+<div class="container-fluid"><h1 class="page-heading text-start">Standard External Page</h1></div>
+<div class="container-fluid">
+    <div class="row col-lg-8">
+        <input type="text" placeholder="Type Designition To Search" aria-label="Search Box" @oninput="((txt)=>OnSearchInput((string)txt?.Value))"/>
+    </div>
+</div>
+
+<div>
+    <div>
+        @if(standardExternals is not null)
+        {
+            <Virtualize Items="standardExternals" Context="se" OverscanCount="10">
+                <div class="card mt-3 border-5">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Thread Designition</th>
+                                <th scope="col">Class</th>
+                                <th scope="col">Major Diameter</th>
+                                <th scope="col">Pitch Diameter</th>
+                                <th scope="col">Minor Diameter</th>
+                                <th scope="col"><button type="button" class="btn btn-primary btn-outline-dark" @onclick="(()=>OpenDrafterDetails(se))">Drafter Details</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="col">@se.CustomThreadDesignition</th>
+                                <th scope="col">@se.Classification</th>
+                                <th scope="col">@se.MajorDiaMin - @se.MajorDiaMax</th>
+                                <th scope="col">@se.PitchDiaMin - @se.PitchDiaMax</th>
+                                <th scope="col">@se.MinorDiaMin - @se.MinorDiaMax</th>
+                                <th scope="col"><button type="button" class="btn btn-secondary btn-outline-info" @onclick="(()=>OpenInspectorDetails(se))">Inspector Details</button></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Virtualize>
+        }
+    </div>
+</div>
+
+@code {
+    private List<StandardExternal> standardExternals;
+    private string searchText = "";
+    protected async override Task OnInitializedAsync()
+    {
+        standardExternals = await standardExternalData.GetAllStandardExternalsAsync();
+    }
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadFilterState();
+            await FilterStandardExternals();
+            StateHasChanged();
+        }
+    }
+    private async Task LoadFilterState()
+    {
+        var stringResults = await sessionStorage.GetAsync<string>(nameof(searchText));
+        searchText = stringResults.Success ? stringResults.Value : "";
+    }
+    private async Task SaveFilterState()
+    {
+        await sessionStorage.SetAsync(nameof(searchText), searchText);
+    }
+    private async Task FilterStandardExternals()
+    {
+        var output = await standardExternalData.GetAllStandardExternalsAsync();
+        if (string.IsNullOrWhiteSpace(searchText) == false)
+        {
+            output = output.Where(se => se.CustomThreadDesignition.Contains(searchText, StringComparison.InvariantCultureIgnoreCase))
+            .OrderBy(se => se.InternalId).ToList();
+        }
+        standardExternals = output;
+        await SaveFilterState();
+    }
+    private async Task OnSearchInput(string searchInput)
+    {
+        searchText = searchInput;
+        await FilterStandardExternals();
+    }
+    private void OpenDrafterDetails(StandardExternal standardExternal)
+    {
+        navManager.NavigateTo($"/drafter/standardexternal/{standardExternal.InternalId}");
+    }
+    private void OpenInspectorDetails(StandardExternal standardExternal)
+    {
+        navManager.NavigateTo($"/inspector/standardexternal/{standardExternal.InternalId}");
+    }
+}

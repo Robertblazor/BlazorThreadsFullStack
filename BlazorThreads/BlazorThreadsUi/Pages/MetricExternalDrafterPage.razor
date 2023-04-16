@@ -1,0 +1,106 @@
+﻿@page "/drafter/metricexternal/{Id:int}"
+@inject IMetricExternalCollection metricExternalData
+@inject NavigationManager navManager
+@attribute [Authorize]
+<h1 class="page-heading text-center">
+    Drafter's Page for Metric External Threads Info Check
+</h1>
+<h1 class=text-center>
+    @metricExternal.CustomThreadDesignition @metricExternal.Classification
+</h1>
+<h3 class="accordion-body">
+    More info & functions can be added to this page with coordination with Quality Planning & Drafting Department
+</h3>
+
+<div>
+    @if(metricExternal is not null)
+    {
+        <div>
+            <table class="table table-dark table-striped table border-2 table-bordered">
+                <thead>
+                    <tr class="text-center">
+                        <th scope="col">Unit System</th>
+                        <th scope="col">Max Major Diameter</th>
+                        <th scope="col">Min Major Diameter</th>
+                        <th scope="col">Max Pitch Diameter</th>
+                        <th scope="col">Min Pitch Diameter</th>
+                        <th scope="col">Max Minor Diameter</th>
+                        <th scope="col">Min Minor Diameter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="text-center">
+                        <th scope="col">Metric System</th>
+                        <th scope="col">@metricExternal.MajorDiaMax</th>
+                        <th scope="col">@metricExternal.MajorDiaMin</th>
+                        <th scope="col">@metricExternal.PitchDiaMax</th>
+                        <th scope="col">@metricExternal.PitchDiaMin</th>
+                        <th scope="col">@metricExternal.MinorDiaMax</th>
+                        <th scope="col">@metricExternal.MinorDiaMin</th>
+                    </tr>
+                    <tr class="text-center">
+                        <th scope="col">English System</th>
+                        <th scope="col">@Math.Round(metricExternal.MajorDiaMax/25.4,4)</th>
+                        <th scope="col">@Math.Round(metricExternal.MajorDiaMin/25.4,4)</th>
+                        <th scope="col">@Math.Round(metricExternal.PitchDiaMax/25.4,4)</th>
+                        <th scope="col">@Math.Round(metricExternal.PitchDiaMin/25.4,4)</th>
+                        <th scope="col">@Math.Round(metricExternal.MinorDiaMax/25.4,4)</th>
+                        <th scope="col">@Math.Round(metricExternal.MinorDiaMin/25.4,4)</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <table class="table table-dark table-striped table border-2 table bodered">
+                <thead>
+                    <tr class="text-center">
+                        <th scope="col">Unit System</th>
+                        <th scope="col">Min Chamfer Size</th>
+                        <th scope="col">Max Chamfer Size</th>
+                        <th scope="col">Bar Size Minimum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="text-center">
+                        <th scope="col">Metric System</th>
+                        <th scope="col">@Math.Max(Math.Round(metricExternal.MinorDiaMin-2,2),0)</th>
+                        <th scope="col">@(metricExternal.MinorDiaMin)</th>
+                        <th scope="col">@(metricExternal.MajorDiaMax)</th>
+                    </tr>
+                </tbody>
+                <tbody>
+                    <tr class="text-center">
+                        <th scope="col">English System</th>
+                        <th scope="col">@Math.Max(Math.Round((metricExternal.MinorDiaMin-2)/25.4,4),0)</th>
+                        <th scope="col">@Math.Round((metricExternal.MinorDiaMin)/25.4,4)</th>
+                        <th scope="col">@Math.Round(metricExternal.MajorDiaMax/25.4,4)</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+<div>
+    <button class="btn btn-close btn-outline-light btn-primary" @onclick="()=>ClosePage()"></button>
+    <button class="btn btn-light btn-outline-info btn-dark"@onclick="()=>ToHomePage()">Back to Home Page</button>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private MetricExternal metricExternal;
+
+    protected async override Task OnInitializedAsync()
+    {
+        metricExternal = await metricExternalData.GetMetricExternalByInternalId(Id);
+    }
+    private void ClosePage()
+    {
+        navManager.NavigateTo($"/metricexternal");
+    }
+    private void ToHomePage()
+    {
+        navManager.NavigateTo($"/");
+    }
+}

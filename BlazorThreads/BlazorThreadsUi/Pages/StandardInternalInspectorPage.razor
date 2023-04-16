@@ -1,0 +1,84 @@
+﻿@page "/inspector/standardinternal/{Id:int}"
+@inject IStandardInternalCollection standardInternalData
+@inject NavigationManager navManager
+@attribute [Authorize]
+<h1 class="page-heading text-center">
+    Inspector's page for Standard Internal Thread Info Check
+</h1>
+<h1 class="text-center">
+    @standardInternal.CustomThreadDesignition @standardInternal.Classification
+</h1>
+<h3 class="accordion-body">
+    More info & functions can be added to this page with coordination with Quality Department Machining Lab
+</h3>
+<div>
+    @if(standardInternal is not null)
+    {
+        <div>
+            <table class="table table-dark table-striped table border-2 table-bordered">
+                <thead>
+                    <tr class="text-center">
+                        <th scope="col">Unit System</th>
+                        <th scope="col">Min Minor Diameter</th>
+                        <th scope="col">Max Minor Diameter</th>
+                        <th scope="col">Min Pitch Diameter</th>
+                        <th scope="col">Max Pitch Diameter</th>
+                        <th scope="col">Min Major Diameter</th>
+                        <th scope="col">Max Major Diameter</th>
+                        <th scope="col">Tap Drill Basic</th>
+                        <th scope="col">Min Thread Depth</th>
+                        <th scope="col">Thread Runouts Max</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="text-center">
+                        <th scope="col">English System</th>
+                        <th scope="col">@(standardInternal.MinorDiaMin)</th>
+                        <th scope="col">@(standardInternal.MinorDiaMax)</th>
+                        <th scope="col">@(standardInternal.PitchDiaMin)</th>
+                        <th scope="col">@(standardInternal.PitchDiaMax)</th>
+                        <th scope="col">@(standardInternal.MajorDiaMin)</th>
+                        <th scope="col">No Limit</th>
+                        <th scope="col">@(standardInternal.TapDrillBasic)</th>
+                        <th scope="col">@(standardInternal.ThreadDepthMin)</th>
+                        <th scope="col">@(standardInternal.ThreadRunouts)</th>
+                    </tr>
+                    <tr class="text-center">
+                        <th scope="col">Metric System</th>
+                        <th scope="col">@Math.Round(standardInternal.MinorDiaMin*25.4,3)</th>
+                        <th scope="col">@Math.Round(standardInternal.MinorDiaMax*25.4,3)</th>
+                        <th scope="col">@Math.Round(standardInternal.PitchDiaMin*25.4,3)</th>
+                        <th scope="col">@Math.Round(standardInternal.PitchDiaMax*25.4,3)</th>
+                        <th scope="col">@Math.Round(standardInternal.MajorDiaMin*25.4,3)</th>
+                        <th scope="col">No Limit</th>
+                        <th scope="col">@Math.Round(standardInternal.TapDrillBasic*25.4,3)</th>
+                        <th scope="col">@Math.Round(standardInternal.ThreadDepthMin*25.4,3)</th>
+                        <th scope="col">@Math.Round(standardInternal.ThreadRunouts*25.4,3)</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+<div>
+    <button class="btn btn-close btn-outline-light btn-primary" @onclick="()=>ClosePage()"></button>
+    <button class="btn btn-light btn-outline-info btn-dark"@onclick="()=>ToHomePage()">Back to Home Page</button>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private StandardInternal? standardInternal;
+    protected async override Task OnInitializedAsync()
+    {
+        standardInternal = await standardInternalData.GetStandardInternalByInternalId(Id);
+    }
+            private void ClosePage()
+    {
+        navManager.NavigateTo($"/standardinternal");
+    }
+    private void ToHomePage()
+    {
+        navManager.NavigateTo($"/");
+    }
+}
