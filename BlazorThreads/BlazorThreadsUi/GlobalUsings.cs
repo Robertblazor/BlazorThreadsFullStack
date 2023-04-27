@@ -3,3 +3,7 @@ global using ThreadsLib.Models;
 global using ThreadsLib.DataAccess;
 global using BlazorThreadsUi.Helpers;
 global using Syncfusion.Blazor;
+global using Azure.Identity;
+global using Azure.Core;
+global using Azure.Security.KeyVault.Secrets;
+global using Azure.Extensions.AspNetCore.Configuration.Secrets;

@@ -3,7 +3,13 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
+TokenCredential identity = builder.Environment.IsDevelopment() ? new DefaultAzureCredential() : 
+new ManagedIdentityCredential();
 
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://threadmongokeyapril2023.vault.azure.net/"),
+    identity
+);
 // Add services to the container.
 // builder.Services.AddRazorPages();
 // builder.Services.AddServerSideBlazor();
